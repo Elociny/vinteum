@@ -1,5 +1,6 @@
 package com.example;
 
+import com.example.model.*;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
@@ -15,44 +16,88 @@ public class PrimaryController {
     @FXML private Label pontosJogador;
     @FXML private Label resultado;
 
-    // private Jogo jogo;
+    private Jogo jogo;
 
-    public void turno(){
-
+    @FXML
+    public void initialize() {
+        novoJogo();
     }
 
-    public void atualizar(){
-        // pontosJogador.setText("Jogador: " + jogo.jogador.getPontos());
-        // pontosMesa.setText("Mesa: " + jogo.computador.getPontos());
-        
-        // mesaDoJogador.getChildren().clear();
-        // mesaDoComputador.getChildren().clear();
+    // Lógica para o turno do jogador
+    public void turno() {
+        if (jogo.acabou()) return;
 
-        // jogo.jogador.getCartas().forEach((carta) -> mesaDoJogador.getChildren().add(imagemCarta(carta)));
-        // jogo.computador.getCartas().forEach((carta) -> mesaDoComputador.getChildren().add(imagemCarta(carta)));
+        if (!jogo.jogador.isParou()) {
+            jogo.distribuirCarta(jogo.jogador);
+        }
+
+        // Computador só joga se ainda não parou
+        if (!jogo.computador.isParou()) {
+            jogo.distribuirCarta(jogo.computador);
+        }
+
+        atualizar();
+
+        // Mostra resultado se o jogo terminou
+        if (jogo.acabou()) {
+            resultado.setText(jogo.resultado());
+        }
     }
 
-    public void novoJogo(){
-        // jogo = new Jogo();
-        // mesaDoJogador.getChildren().clear();
-        // mesaDoComputador.getChildren().clear();
-        // pontosJogador.setText("Jogador: 0");
-        // pontosMesa.setText("Mesa: 0");
-        // resultado.setText("");
+    // Atualiza as cartas e os pontos na tela
+    public void atualizar() {
+        pontosJogador.setText("Jogador: " + jogo.jogador.getPontos());
+        pontosMesa.setText("Mesa: " + jogo.computador.getPontos());
+
+        mesaDoJogador.getChildren().clear();
+        mesaDoComputador.getChildren().clear();
+
+        jogo.jogador.getCartas()
+                .forEach(carta -> mesaDoJogador.getChildren().add(imagemCarta(carta)));
+
+        jogo.computador.getCartas()
+                .forEach(carta -> mesaDoComputador.getChildren().add(imagemCarta(carta)));
     }
 
-    public void pedirCarta(){
-       turno();
+    // Inicia um novo jogo
+    public void novoJogo() {
+        jogo = new Jogo();
+
+        mesaDoJogador.getChildren().clear();
+        mesaDoComputador.getChildren().clear();
+
+        pontosJogador.setText("Jogador: 0");
+        pontosMesa.setText("Mesa: 0");
+        resultado.setText("");
     }
 
-    public void parar(){
-        // jogo.jogador.parar();
-        turno();
+    // Jogador pede carta
+    public void pedirCarta() {
+        if (!jogo.jogador.isParou()) {
+            turno();
+        }
     }
-    
 
-    // private ImageView imagemCarta(Carta carta) {
-    //    return new ImageView(App.class.getResource(carta.imagePath()).toString());
-    // }
+    // Jogador decide parar
+    public void parar() {
+        jogo.jogador.parar();
 
+        // Computador joga automaticamente até parar
+        while (!jogo.computador.isParou()) {
+            jogo.distribuirCarta(jogo.computador);
+        }
+
+        atualizar();
+
+        // Exibe resultado final
+        resultado.setText(jogo.resultado());
+    }
+
+    // Cria ImageView para a carta
+    private ImageView imagemCarta(Carta carta) {
+        ImageView imagem = new ImageView(App.class.getResource(carta.imagePath()).toString());
+        imagem.setFitHeight(120);
+        imagem.setPreserveRatio(true);
+        return imagem;
+    }
 }
